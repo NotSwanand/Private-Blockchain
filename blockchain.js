@@ -3,6 +3,7 @@ const cryptoHash = require("./crypto-hash");
 
 class Blockchain {
   constructor() {
+    // Initialize with a constant genesis block
     this.chain = [Block.genesis()];
   }
 
@@ -15,48 +16,52 @@ class Blockchain {
   }
 
   static isValidChain(chain) {
+    // ✅ Ensure first block (genesis) is identical across all nodes
     if (JSON.stringify(chain[0]) !== JSON.stringify(Block.genesis())) {
+      console.error("❌ Invalid Genesis Block");
       return false;
     }
 
     for (let i = 1; i < chain.length; i++) {
       const { timestamp, prevHash, hash, nonce, difficulty, data } = chain[i];
-      const lastDifficulty = chain[i - 1].difficulty;
-      const realLastHash = chain[i - 1].hash;
+      const lastBlock = chain[i - 1];
 
-      if (prevHash !== realLastHash) return false;
+      // ✅ Check if the current block correctly references the previous one
+      if (prevHash !== lastBlock.hash) return false;
 
+      // ✅ Validate hash correctness
       const validatedHash = cryptoHash(
         timestamp,
-        nonce,
-        difficulty,
         prevHash,
-        data
+        data,
+        nonce,
+        difficulty
       );
+
       if (hash !== validatedHash) return false;
-      if(Math.abs(lastDifficulty-difficulty) > 1) return false;
+
+      // ✅ Check difficulty jump
+      if (Math.abs(lastBlock.difficulty - difficulty) > 1) return false;
     }
+
     return true;
   }
 
   replaceChain(chain) {
+    // ✅ Accept only a longer and valid chain
     if (chain.length <= this.chain.length) {
-      console.error("This incoming chain is not longer");
+      console.error("⚠️ Incoming chain is not longer");
       return;
     }
+
     if (!Blockchain.isValidChain(chain)) {
-      console.error("The incoming chain is not valid");
+      console.error("⚠️ Incoming chain is invalid");
       return;
     }
+
+    console.log("🔁 Replacing chain with new chain");
     this.chain = chain;
   }
 }
-// const blockchain = new Blockchain();
-// blockchain.addBlock({data:"Block1"});
-// blockchain.addBlock({data:"Block2"})
-// console.log(blockchain);
-// const result = Blockchain.isValidChain(blockchain.chain);
-// console.log(result);
-// console.log(blockchain.chain);
 
 module.exports = Blockchain;

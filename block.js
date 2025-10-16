@@ -12,6 +12,7 @@ class Block {
     this.difficulty = difficulty;
   }
 
+  // ✅ Use shared, constant genesis block for all nodes
   static genesis() {
     return new this(GENESIS_DATA);
   }
@@ -21,6 +22,8 @@ class Block {
     const prevHash = prevBlock.hash;
     let { difficulty } = prevBlock;
     let nonce = 0;
+
+    // Proof-of-Work loop
     do {
       nonce++;
       timestamp = Date.now();
@@ -30,6 +33,7 @@ class Block {
       });
       hash = cryptoHash(timestamp, prevHash, data, nonce, difficulty);
     } while (hexToBinary(hash).substring(0, difficulty) !== "0".repeat(difficulty));
+
     return new this({
       timestamp,
       prevHash,
@@ -40,28 +44,17 @@ class Block {
     });
   }
 
-  static adjustDifficulty({originalBlock, timestamp}) {
+  static adjustDifficulty({ originalBlock, timestamp }) {
     const { difficulty } = originalBlock;
+
     if (difficulty < 1) return 1;
-    const difference = timestamp-originalBlock.timestamp;
+
+    const difference = timestamp - originalBlock.timestamp;
+
+    // 🔹 Difficulty target adjustment based on mining rate
     if (difference > MINE_RATE) return difficulty - 1;
     return difficulty + 1;
   }
 }
 
 module.exports = Block;
-
-// const block1 = new Block({
-//   timestamp: "12-1-22",
-//   prevHash: "0xabc",
-//   hash: "0x123",
-//   data: "Hello",
-// });
-
-// console.log(block1);
-
-// const genesisBlock = Block.genesis();
-// console.log(genesisBlock);
-
-// const result = Block.mineBlock({prevBlock: block1, data: "block2"});
-// console.log(result);
