@@ -1,56 +1,157 @@
-## Private Blockchain Implementation with JavaScript, Redis, Node.js, and Express.js
+# 🪙 Private Blockchain Network (Render + Upstash)
 
-This project presents a robust private blockchain implementation using JavaScript, Redis server, Node.js, and express.js. The purpose of this blockchain is to provide a secure and decentralized ledger for recording transactions in a private network.
+A simple **private blockchain network** hosted on **Render** with multi-node synchronization powered by **Upstash Redis (Pub/Sub)**.
 
-### Key Features
+Each node maintains its own blockchain instance and automatically synchronizes blocks across the network — demonstrating **decentralized data consistency** in a minimal setup.
 
-- **Genesis Block**: The blockchain starts with a well-defined genesis block, which serves as the initial point of the chain.
+---
 
-- **Efficient Mining Functionality**: The mining process is optimized through peer-to-peer (P2P) communication, enabling nodes to collaborate and validate new blocks efficiently.
+## 🚀 Live Demo
 
-- **Secure Block Addition**: Each block is securely added to the blockchain by undergoing a thorough hash verification using the Sha256 algorithm.
+| Service | URL | Description |
+|----------|-----|-------------|
+| 🟢 Root Node | [https://private-blockchain.onrender.com](https://private-blockchain.onrender.com) | Primary blockchain node (mining allowed) |
+| 🟠 Peer Node | [https://private-blockchain-node2.onrender.com](https://private-blockchain-node2.onrender.com) | Secondary node syncing via Upstash Redis |
 
-- **Comprehensive Blockchain Validation**: The entire blockchain is subjected to comprehensive validation to ensure its integrity and consistency, preventing any unauthorized modifications.
+> ⛏️ Try mining on the root node’s `/api/mine` endpoint or UI — the peer node will automatically update its chain in real-time.
 
-- **Nonce Functionality**: Nonce functionality is incorporated to add an additional layer of security and prevent tampering or manipulation of blocks.
+---
 
-- **Dynamic Difficulty Adjustment**: The difficulty level for mining new blocks is adjusted dynamically in bits, similar to the Bitcoin protocol, ensuring optimal mining performance.
+## 🧠 Project Overview
 
-- **Adaptive Difficulty Modification**: The difficulty level is adjusted based on the time taken to mine a block, ensuring a consistent block generation rate.
+This project demonstrates a **cloud-hosted private blockchain network** with multiple connected nodes that:
+- Maintain independent blockchains.
+- Sync their chains using Redis Publish/Subscribe.
+- Validate blocks and maintain consensus.
+- Run on Render’s free cloud infrastructure.
 
-### Getting Started
+It simulates the **distributed consensus** concept of real blockchain systems like Bitcoin and Ethereum — in a simplified educational setup.
 
-1. Clone the repository:
-   ```shell
-   git clone https://github.com/imranmustafa030/Private-Blockchain.git
-   ```
+---
 
-2. Install dependencies:
-   ```shell
-   npm install
-   ```
+## 🧩 Architecture Diagram
 
-3. Configure Redis server:
-   - Install Redis: [Redis Quick Start Guide](https://redis.io/topics/quickstart)
-   - Update Redis connection details in `config.js`.
+          ┌──────────────────────────┐
+          │   🟢 Root Node (Render)   │
+          │  private-blockchain.onrender.com
+          │  - Mines new blocks
+          │  - Publishes updates
+          └────────────┬─────────────┘
+                       │  Pub/Sub (BLOCKCHAIN)
+                       ▼
+          ┌──────────────────────────┐
+          │   🟠 Peer Node (Render)   │
+          │  private-blockchain-node2.onrender.com
+          │  - Subscribes to updates
+          │  - Syncs blockchain
+          └────────────┬─────────────┘
+                       │
+                🔗 Upstash Redis Cloud
+           (Secure rediss:// connection)
 
-4. Start the blockchain node:
-   ```shell
-   node app.js
-   ```
+---
 
-### Usage
+## 🛠️ Tech Stack
 
-- Use appropriate API endpoints to interact with the blockchain, such as:
-  - `/mineBlock` - Mine a new block.
-  - `/getBlockchain` - Get the full blockchain.
-  - `/getBlock/:blockHash` - Get a specific block using its hash.
-  - `/addTransaction` - Add a new transaction to the blockchain.
+| Category | Technologies |
+|-----------|--------------|
+| **Backend** | Node.js, Express.js |
+| **Blockchain** | Custom proof-of-work chain (difficulty, nonce, hashes) |
+| **Communication** | Redis Pub/Sub via [Upstash](https://upstash.com/) |
+| **Hosting** | [Render](https://render.com/) free tier |
+| **Database** | Redis (no SQL DB needed) |
 
-### Contributions
+---
 
-Contributions are welcome! If you encounter any issues or have suggestions for improvements, please feel free to submit a pull request or open an issue in the repository.
+## ⚙️ Installation (Local Setup)
 
-### Acknowledgements
+### 1️⃣ Clone the repository
+```bash
+git clone https://github.com/NotSwanand/Private-Blockchain.git
+cd Private-Blockchain
+```
 
-This project was developed with inspiration from various blockchain implementations and the Bitcoin protocol. Special thanks to the open-source community for their valuable contributions.
+### 2️⃣ Install dependencies
+```bash
+npm install
+```
+
+### 3️⃣ Start a local Redis instance (optional)
+
+If you have Redis installed locally:
+```bash
+redis-server
+```
+
+Or use your Upstash Redis connection:
+```bash
+set REDIS_URL=rediss://default:YOUR_UPSTASH_KEY@YOUR_HOST.upstash.io:6379
+```
+### 4️⃣ Run the blockchain node
+```bash
+npm start
+```
+
+Visit http://localhost:3000/api/blocks
+
+### 🌐 Cloud Deployment (Render Setup)
+
+🟢 Root Node
+| Key                 | Value                                 |
+| ------------------- | ------------------------------------- |
+| `REDIS_URL`         | `rediss://default:<YOUR_UPSTASH_URL>` |
+| `ROOT_NODE_ADDRESS` | *(leave empty)*                       |
+
+🟠 Peer Node(s)
+| Key                 | Value                                     |
+| ------------------- | ----------------------------------------- |
+| `REDIS_URL`         | same Upstash Redis URL                    |
+| `ROOT_NODE_ADDRESS` | `https://private-blockchain.onrender.com` |
+
+🧩 API Endpoints
+| Method | Endpoint      | Description               |
+| ------ | ------------- | ------------------------- |
+| `GET`  | `/api/blocks` | View full blockchain      |
+| `POST` | `/api/mine`   | Add a new block with data |
+
+### 🧩 Consensus Rules
+
+A block is mined via Proof-of-Work:
+
+Hash starts with a specific number of leading zeros (difficulty).
+
+When receiving a chain from peers:
+
+Only a longer and valid chain replaces the local one.
+
+Each node verifies:
+
+Correct hash link.
+
+Valid proof of work.
+
+Valid genesis block.
+
+### 💡 Key Learnings
+
+Setting up blockchain consensus logic.
+
+Using Redis Pub/Sub for decentralized data sync.
+
+Handling environment-based cloud configuration.
+
+Deploying distributed services on free-tier Render.
+
+### 👨‍💻 Author
+
+Swanand Bowalekar
+📍 Computer Engineering Student
+📫 GitHub: @NotSwanand
+
+⭐ If you found this helpful
+
+Give this repo a star 🌟 on GitHub — it helps a ton!
+
+✅ License
+
+This project is open-source under the MIT License.
