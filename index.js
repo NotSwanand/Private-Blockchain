@@ -11,7 +11,10 @@ const pubsub = new PubSub({ blockchain });
 
 // ✅ Use Render's dynamic port or fallback to 3000
 const DEFAULT_PORT = process.env.PORT || port || 3000;
-const ROOT_NODE_ADDRESS = `http://localhost:${DEFAULT_PORT}`;
+
+// ✅ Use a PUBLIC ROOT_NODE_ADDRESS if provided (for peers on Render)
+const ROOT_NODE_ADDRESS =
+  process.env.ROOT_NODE_ADDRESS || `http://localhost:${DEFAULT_PORT}`;
 
 // ✅ Middleware
 app.use(bodyParser.json());
@@ -32,11 +35,19 @@ app.post("/api/mine", (req, res) => {
 
 // -------------------- Sync Chains --------------------
 const syncChains = () => {
+  // Don’t sync from yourself
+  if (ROOT_NODE_ADDRESS.includes(`localhost:${DEFAULT_PORT}`)) {
+    console.log("🟡 Skipping sync — this is the root node");
+    return;
+  }
+
   request({ url: `${ROOT_NODE_ADDRESS}/api/blocks` }, (error, response, body) => {
     if (!error && response.statusCode === 200) {
       const rootChain = JSON.parse(body);
       console.log("🔄 Syncing chain with root node...");
       blockchain.replaceChain(rootChain);
+    } else {
+      console.error("❌ Sync failed:", error || response.statusCode);
     }
   });
 };
@@ -52,8 +63,8 @@ const PORT = PEER_PORT || DEFAULT_PORT;
 app.listen(PORT, () => {
   console.log(`✅ Listening on port ${PORT}`);
 
-  // 🔹 Ensure new peers sync the latest chain
-  if (PORT !== DEFAULT_PORT) syncChains();
+  // 🔹 Try syncing on startup (only if not root)
+  syncChains();
 
   // 🔹 Broadcast initial chain after startup
   setTimeout(() => pubsub.broadcastChain(), 1000);

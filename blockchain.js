@@ -1,9 +1,10 @@
+// blockchain.js (full file for clarity)
+
 const Block = require("./block");
 const cryptoHash = require("./crypto-hash");
 
 class Blockchain {
   constructor() {
-    // Initialize with a constant genesis block
     this.chain = [Block.genesis()];
   }
 
@@ -16,9 +17,8 @@ class Blockchain {
   }
 
   static isValidChain(chain) {
-    // ✅ Ensure first block (genesis) is identical across all nodes
     if (JSON.stringify(chain[0]) !== JSON.stringify(Block.genesis())) {
-      console.error("❌ Invalid Genesis Block");
+      console.error("❌ Invalid genesis block");
       return false;
     }
 
@@ -26,10 +26,8 @@ class Blockchain {
       const { timestamp, prevHash, hash, nonce, difficulty, data } = chain[i];
       const lastBlock = chain[i - 1];
 
-      // ✅ Check if the current block correctly references the previous one
       if (prevHash !== lastBlock.hash) return false;
 
-      // ✅ Validate hash correctness
       const validatedHash = cryptoHash(
         timestamp,
         prevHash,
@@ -37,30 +35,42 @@ class Blockchain {
         nonce,
         difficulty
       );
-
       if (hash !== validatedHash) return false;
 
-      // ✅ Check difficulty jump
       if (Math.abs(lastBlock.difficulty - difficulty) > 1) return false;
     }
-
     return true;
   }
 
-  replaceChain(chain) {
-    // ✅ Accept only a longer and valid chain
-    if (chain.length <= this.chain.length) {
-      console.error("⚠️ Incoming chain is not longer");
-      return;
-    }
+  // Simple cumulative work metric: sum of difficulties
+  static totalWork(chain) {
+    return chain.reduce((sum, b) => sum + (b.difficulty || 0), 0);
+  }
 
-    if (!Blockchain.isValidChain(chain)) {
+  replaceChain(incomingChain) {
+    if (!Blockchain.isValidChain(incomingChain)) {
       console.error("⚠️ Incoming chain is invalid");
       return;
     }
 
+    const currentLen = this.chain.length;
+    const incomingLen = incomingChain.length;
+
+    const currentWork = Blockchain.totalWork(this.chain);
+    const incomingWork = Blockchain.totalWork(incomingChain);
+
+    // ✅ Replace if longer OR same length but higher cumulative work
+    const isBetter =
+      incomingLen > currentLen ||
+      (incomingLen === currentLen && incomingWork > currentWork);
+
+    if (!isBetter) {
+      console.error("⚠️ Incoming chain is not better (length/work)");
+      return;
+    }
+
     console.log("🔁 Replacing chain with new chain");
-    this.chain = chain;
+    this.chain = incomingChain;
   }
 }
 
