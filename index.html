@@ -95,7 +95,7 @@
 
   <div class="controls">
     <button class="mine" onclick="mine()">⛏️ Mine New Block</button>
-    <button onclick="loadBlocks()">🔄 Refresh</button>
+    <button onclick="resetChain()">🔄 Refresh</button>
   </div>
 
   <div class="status" id="status">Loading blockchain...</div>
@@ -157,6 +157,18 @@
       } catch (err) {
         console.error('Mining failed:', err);
         status.textContent = '❌ Mining failed';
+      }
+    }
+
+    async function resetChain() {
+      status.innerHTML = 'Resetting blockchain... <span class="loading"></span>';
+      try {
+        await fetch('/api/reset');
+        await loadBlocks();
+        status.textContent = '✅ Blockchain reset to genesis block';
+      } catch (err) {
+        console.error('Reset failed:', err);
+        status.textContent = '❌ Failed to reset blockchain';
       }
     }
 

@@ -21,15 +21,26 @@ app.use(bodyParser.json());
 app.use(express.static(__dirname));
 
 // -------------------- Routes --------------------
+
+// 🧱 Get full blockchain
 app.get("/api/blocks", (req, res) => {
   res.json(blockchain.chain);
 });
 
+// ⛏️ Mine new block
 app.post("/api/mine", (req, res) => {
   const { data } = req.body;
   blockchain.addBlock({ data });
   pubsub.broadcastChain();
   console.log("⛏️  New block mined and broadcasted");
+  res.redirect("/api/blocks");
+});
+
+// 🔄 Reset blockchain to genesis
+app.get("/api/reset", (req, res) => {
+  blockchain.chain = [blockchain.chain[0]]; // Keep only genesis block
+  console.log("🔄 Blockchain reset to genesis block");
+  pubsub.broadcastChain(); // Optional: broadcast reset to peers
   res.redirect("/api/blocks");
 });
 
