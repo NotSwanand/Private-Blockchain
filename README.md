@@ -116,30 +116,20 @@ Visit http://localhost:3000/api/blocks
 
 ### 🧩 Consensus Rules
 
-A block is mined via Proof-of-Work:
-
-Hash starts with a specific number of leading zeros (difficulty).
-
-When receiving a chain from peers:
-
-Only a longer and valid chain replaces the local one.
-
-Each node verifies:
-
-Correct hash link.
-
-Valid proof of work.
-
-Valid genesis block.
+- A block is mined via Proof-of-Work:
+- Hash starts with a specific number of leading zeros (difficulty).
+- When receiving a chain from peers:
+- Only a longer and valid chain replaces the local one.
+- Each node verifies:
+- Correct hash link.
+- Valid proof of work.
+- Valid genesis block.
 
 ### 💡 Key Learnings
 
 Setting up blockchain consensus logic.
-
 Using Redis Pub/Sub for decentralized data sync.
-
 Handling environment-based cloud configuration.
-
 Deploying distributed services on free-tier Render.
 
 ### 👨‍💻 Author
