@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Private Blockchain Network</title>
+  <style>
+    body {
+      font-family: "Segoe UI", sans-serif;
+      background: #0d1117;
+      color: #c9d1d9;
+      margin: 0;
+      padding: 20px;
+    }
+    h1 {
+      text-align: center;
+      color: #58a6ff;
+      margin-bottom: 10px;
+    }
+    .info {
+      text-align: center;
+      margin-bottom: 25px;
+      font-size: 0.95rem;
+      color: #8b949e;
+    }
+    .controls {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    button {
+      background: #238636;
+      color: white;
+      border: none;
+      padding: 10px 18px;
+      border-radius: 6px;
+      cursor: pointer;
+      margin: 5px;
+      font-size: 0.95rem;
+      transition: all 0.2s;
+    }
+    button:hover {
+      background: #2ea043;
+    }
+    button.mine {
+      background: #58a6ff;
+    }
+    button.mine:hover {
+      background: #1f6feb;
+    }
+    .status {
+      color: #8b949e;
+      font-size: 0.9rem;
+      text-align: center;
+      margin-bottom: 10px;
+    }
+    .block {
+      background: #161b22;
+      border: 1px solid #30363d;
+      border-radius: 8px;
+      padding: 12px 15px;
+      margin: 12px 0;
+      box-shadow: 0 0 10px rgba(56,139,253,0.1);
+    }
+    .block h3 {
+      color: #58a6ff;
+      margin: 0 0 8px 0;
+    }
+    .hash {
+      font-family: monospace;
+      color: #a5d6ff;
+      word-break: break-word;
+      font-size: 0.9rem;
+    }
+    .loading {
+      display: inline-block;
+      width: 14px;
+      height: 14px;
+      border: 2px solid #58a6ff;
+      border-top: 2px solid transparent;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin-left: 6px;
+    }
+    @keyframes spin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body>
+  <h1>🚀 Private Blockchain Network</h1>
+  <div class="info">
+    Node Info: <span id="node-info">Fetching...</span>
+  </div>
+
+  <div class="controls">
+    <button class="mine" onclick="mine()">⛏️ Mine New Block</button>
+    <button onclick="loadBlocks()">🔄 Refresh</button>
+  </div>
+
+  <div class="status" id="status">Loading blockchain...</div>
+  <div id="blocks"></div>
+
+  <script>
+    const status = document.getElementById('status');
+    const info = document.getElementById('node-info');
+
+    async function getPort() {
+      try {
+        const url = window.location.href;
+        const portMatch = url.match(/:(\d+)/);
+        const port = portMatch ? portMatch[1] : 'Render Cloud Port';
+        info.textContent = `Connected to ${url} | Port: ${port}`;
+      } catch {
+        info.textContent = 'Node information unavailable';
+      }
+    }
+
+    async function loadBlocks() {
+      try {
+        status.innerHTML = 'Loading blockchain... <span class="loading"></span>';
+        const res = await fetch('/api/blocks');
+        const chain = await res.json();
+
+        const div = document.getElementById('blocks');
+        div.innerHTML = chain
+          .map((block, i) => `
+            <div class="block">
+              <h3>Block #${i}</h3>
+              <p><strong>Timestamp:</strong> ${block.timestamp}</p>
+              <p><strong>Prev Hash:</strong> <span class="hash">${block.prevHash}</span></p>
+              <p><strong>Hash:</strong> <span class="hash">${block.hash}</span></p>
+              <p><strong>Data:</strong> ${JSON.stringify(block.data)}</p>
+              <p><strong>Nonce:</strong> ${block.nonce}</p>
+              <p><strong>Difficulty:</strong> ${block.difficulty}</p>
+            </div>
+          `)
+          .join('');
+
+        status.textContent = `✅ Blockchain loaded (${chain.length} blocks)`;
+      } catch (err) {
+        console.error('Failed to load blocks:', err);
+        status.textContent = '❌ Failed to load blockchain';
+      }
+    }
+
+    async function mine() {
+      status.innerHTML = 'Mining new block... <span class="loading"></span>';
+      try {
+        await fetch('/api/mine', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ data: 'Block mined via UI' })
+        });
+        await loadBlocks();
+        status.textContent = '✅ New block mined successfully!';
+      } catch (err) {
+        console.error('Mining failed:', err);
+        status.textContent = '❌ Mining failed';
+      }
+    }
+
+    // Initialize UI
+    getPort();
+    loadBlocks();
+  </script>
+</body>
+</html>
