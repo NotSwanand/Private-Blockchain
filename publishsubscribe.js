@@ -9,9 +9,11 @@ class PubSub {
   constructor({ blockchain }) {
     this.blockchain = blockchain;
 
-    // Explicitly specify Redis URL (works with WSL or local Redis)
-    this.publisher = redis.createClient({ url: "redis://127.0.0.1:6379" });
-    this.subscriber = redis.createClient({ url: "redis://127.0.0.1:6379" });
+    // ✅ Use cloud Redis if available, otherwise local fallback
+    const redisUrl = process.env.REDIS_URL || "redis://127.0.0.1:6379";
+
+    this.publisher = redis.createClient({ url: redisUrl });
+    this.subscriber = redis.createClient({ url: redisUrl });
 
     this.init();
   }
@@ -27,10 +29,10 @@ class PubSub {
       await this.subscriber.subscribe(CHANNELS.TEST, (message) =>
         this.handleMessage(CHANNELS.TEST, message)
       );
+
       await this.subscriber.subscribe(CHANNELS.BLOCKCHAIN, (message) =>
         this.handleMessage(CHANNELS.BLOCKCHAIN, message)
       );
-
     } catch (err) {
       console.error("❌ Redis connection error:", err);
     }
@@ -40,6 +42,7 @@ class PubSub {
     console.log(`📩 Message Received. Channel: ${channel} | Message: ${message}`);
 
     const parsedMessage = JSON.parse(message);
+
     if (channel === CHANNELS.BLOCKCHAIN) {
       this.blockchain.replaceChain(parsedMessage);
     }
